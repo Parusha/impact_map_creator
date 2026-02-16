@@ -1,20 +1,41 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 
 const DEFAULT_CIRCLE_LABELS = [
     'Premium Site',
     'Lucky Fish',
     'Mozambique Site',
-]
+];
 
 export default function ImpactMapDiagram() {
     const [circles, setCircles] = useState(DEFAULT_CIRCLE_LABELS);
     const [rectangleText, setRectangleText] = useState('');
     const diagramRef = useRef(null);
+    const rectangleRef = useRef(null);
 
+    const dynamicWidth = Math.max(220, circles.length * 220);
+
+    /* ---------------- AUTO GROW TEXTAREA ---------------- */
+    const autoResizeTextarea = () => {
+        const textarea = rectangleRef.current;
+        if (textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight-50 + 'px';
+        }
+    };
+
+    useEffect(() => {
+        autoResizeTextarea();
+    }, [rectangleText]);
+
+    const handleRectangleChange = (e) => {
+        setRectangleText(e.target.value);
+    };
+
+    /* ---------------- CIRCLE HANDLERS ---------------- */
 
     const handleAddCircle = () => {
-        if (circles.length >= 6) return;
+        if (circles.length >= 10) return;
 
         if (circles.length < DEFAULT_CIRCLE_LABELS.length) {
             setCircles((prev) => [
@@ -27,7 +48,8 @@ export default function ImpactMapDiagram() {
                 `Circle ${prev.length + 1}`,
             ]);
         }
-    }
+    };
+
     const handleRemoveCircle = (index) => {
         if (circles.length === 1) return;
         setCircles((prev) => prev.filter((_, i) => i !== index));
@@ -38,6 +60,8 @@ export default function ImpactMapDiagram() {
             prev.map((circle, i) => (i === index ? value : circle))
         );
     };
+
+    /* ---------------- DOWNLOAD ---------------- */
 
     const handleDownload = async () => {
         if (document.activeElement instanceof HTMLElement) {
@@ -62,9 +86,6 @@ export default function ImpactMapDiagram() {
             link.click();
         }
     };
-
-
-    const dynamicWidth = Math.max(220, circles.length * 220);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-white p-10 font-sans">
@@ -97,16 +118,6 @@ export default function ImpactMapDiagram() {
                 ))}
             </div>
 
-            {/* Rectangle Input */}
-            <div className="w-full max-w-xl mb-10">
-                <input
-                    type="text"
-                    value={rectangleText}
-                    onChange={(e) => setRectangleText(e.target.value)}
-                    className="p-4 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-4 focus:ring-green-300 shadow-sm text-black"
-                    placeholder="Enter rectangle text"
-                />
-            </div>
 
             {/* Add Circle Button */}
             <button
@@ -222,7 +233,7 @@ export default function ImpactMapDiagram() {
                         ))}
                     </div>
 
-                    {/* Rectangle */}
+                    {/* Auto-Growing Rectangle */}
                     <div
                         style={{
                             marginTop: 1,
@@ -231,24 +242,32 @@ export default function ImpactMapDiagram() {
                             width: '100%',
                         }}
                     >
-                        <div
+                        <textarea
+                            ref={rectangleRef}
+                            value={rectangleText}
+                            onChange={handleRectangleChange}
+                            placeholder="Your text here"
+                            rows={1}
                             style={{
                                 minWidth: 220,
                                 width: dynamicWidth,
+                                minHeight: 10,
                                 padding: '20px 35px',
                                 border: '3px solid #28a745',
                                 borderRadius: 14,
                                 backgroundColor: '#fff',
                                 textAlign: 'center',
                                 fontWeight: 600,
+                                fontSize:"15px",
                                 whiteSpace: 'pre-wrap',
                                 wordBreak: 'break-word',
                                 boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                                 color: '#000',
+                                resize: 'none',
+                                overflow: 'hidden',
+                                outline: 'none',
                             }}
-                        >
-                            {rectangleText || 'Your text here'}
-                        </div>
+                        />
                     </div>
                 </div>
             </div>
